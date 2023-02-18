@@ -8,6 +8,7 @@ public class RewardApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(RewardApplication.class, args);
+
 	}
 
 }

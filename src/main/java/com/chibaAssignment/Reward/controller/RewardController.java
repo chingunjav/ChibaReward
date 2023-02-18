@@ -1,33 +1,54 @@
 package com.chibaAssignment.Reward.controller;
 
-import com.chibaAssignment.Reward.service.RewardService;
+import com.chibaAssignment.Reward.entity.Transaction;
+import com.chibaAssignment.Reward.service.RewardServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @RestController
-@RequestMapping("/rewards")
+@RequestMapping("/reward")
 public class RewardController {
 
     @Autowired
-    RewardService service;
+    RewardServiceImpl service;
+
     @GetMapping("/")
-    public String  getHello(){
-        return "hi Chiba";
+    public String hello(){
+        service.fakeData();
+        return "Initial fake data added successfully";
+    }
+    @GetMapping("/list")
+    public ResponseEntity<List<Transaction>> getTransactions(){
+        List<Transaction> list = service.listTransactions();
+        return new ResponseEntity<>(list, HttpStatus.OK);
+    }
+    @GetMapping("/limit/{amount}")
+    public ResponseEntity<List<Transaction>> limitedTransaction(@PathVariable String amount){
+        List<Transaction> list = new ArrayList<>();
+        try {
+            int checked = Integer.parseInt(amount);
+            list = service.listLimitedTransactions(checked);
+        }catch (Exception e ){
+            throw  new InvalidAmountException("Invalid value!! must be integer");
+        }
+        return new ResponseEntity<>(list,HttpStatus.OK);
     }
 
-    @GetMapping("/{amount}")
-    public int rewardAmount(@PathVariable String amount){
-        float givenAmount =0;
-        int checkedValue =0;
-        int totalPoint =0;
+    @PostMapping("/add")
+    public ResponseEntity<Transaction> createTransaction(@RequestBody Transaction transaction){
+        if(transaction.getPurchase().signum() < 0)
+            throw new InvalidAmountException("transaction amount must be greater than 0.0");
         try{
-            amount = amount.trim();
-            givenAmount = Float.parseFloat(amount);
-            checkedValue = Math.round(givenAmount);
-            totalPoint = service.totalRewards(checkedValue);
-        }catch (Exception e){
-            throw new InvalidAmountException();
+            service.addTransaction(transaction);
+        }catch (Exception e) {
+            System.out.println(e.getMessage());
         }
-        return totalPoint;
+        return new ResponseEntity<>(transaction, HttpStatus.CREATED);
     }
+
 }
